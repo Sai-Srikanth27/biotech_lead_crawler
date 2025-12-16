@@ -3,27 +3,21 @@
 ## Goal
 Build a web agent/dashboard to identify, enrich, and rank biotech leads for 3D in-vitro models.
 
-## Architecture
-- **Framework**: Next.js (App Router)
-- **Styling**: Tailwind CSS (Premium, Dark Mode, Glassmorphism)
-- **Language**: TypeScript
-- **Data**: Mock Data Generation (Simulating LinkedIn/PubMed) -> Internal JSON Store -> Dashboard
+## Implementation Status
+- [x] **Project Setup**: Next.js 15, Tailwind CSS, TypeScript.
+- [x] **Data Engine**:
+    - `lib/types.ts`: Defined Lead schema.
+    - `lib/mockData.ts`: Generated realistic biotech profiles.
+    - `lib/scoring.ts`: Implemented weighted probability algorithm (Role +30, Funding +20, etc).
+- [x] **User Interface**:
+    - `components/Dashboard.tsx`: Interactive dashboard with filtering, search, and stats.
+    - Glassmorphic design with dark mode aesthetics.
+- [x] **Ready to Run**: Run `npm run dev` to launch.
 
-## Features
-1.  **Lead Dashboard**: Table view with Name, Title, Company, Location, Rank, Probability (%).
-2.  **Probability Engine**:
-    *   **Role Fit (+30)**: Title contains Toxicology, Safety, Hepatic, 3D.
-    *   **Company Intent (+20)**: Series A/B Funding.
-    *   **Technographics (+15/10)**: Uses In-Vitro / NAMs.
-    *   **Location (+10)**: Hubs (Boston, Cambridge, Bay Area, Basel, UK Golden Triangle).
-    *   **Scientific Intent (+40)**: Published on DILI/Liver Toxicity in last 2 years.
-3.  **Search & Filter**: Filter by Location, Title, Rank.
-4.  **Detail View**: (Optional) Pop-over showing score breakdown.
-
-## Implementation Steps
-1.  [x] Initialize Project
-2.  [ ] Setup Tailwind Theme (Dark/Glass)
-3.  [ ] Create Types & Mock Data Generator (`lib/data.ts`)
-4.  [ ] Implement Scoring Logic (`lib/scoring.ts`)
-5.  [ ] Build UI Components (`components/Dashboard.tsx`, `components/LeadTable.tsx`)
-6.  [ ] Assemble Main Page (`app/page.tsx`)
+## Next/Advanced Steps (Future)
+1.  **Backend Integration**: Connect `lib/data.ts` to a real database (Postgres).
+2.  **API Connections**:
+    - **LinkedIn**: Integrate Proxycurl API or RapidAPI for real profile fetching.
+    - **PubMed**: Use NCBI E-utilities API to check scientific intent.
+    - **Crunchbase**: Use Crunchbase API for funding data.
+3.  **Crawler**: Build a Python service (Selenium/Playwright) to feed the database if APIs are cost-prohibitive.
