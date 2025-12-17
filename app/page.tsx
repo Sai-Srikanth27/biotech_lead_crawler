@@ -1,8 +1,8 @@
 import Dashboard from '@/components/Dashboard';
 
 export const metadata = {
-  title: 'BioScout 3D',
-  description: 'AI-Powered Lead Prioritization for 3D In-Vitro Models',
+  title: 'FundScout AI',
+  description: 'AI-Powered Investment & Partnership Lead Prioritization',
 };
 
 export default function Page() {

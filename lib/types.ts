@@ -1,37 +1,29 @@
-export interface Company {
-  name: string;
-  hqLocation: string;
-  isRemoteFriendly: boolean;
-  fundingStage: 'Seed' | 'Series A' | 'Series B' | 'Series C' | 'IPO' | 'Public' | 'Bootstrapped';
-  technographics: string[]; // e.g. 'In-Vitro', 'Organ-on-Chip', 'NAMs', 'High Content Screening'
-  industry: string;
-}
-
-export interface Publication {
-  title: string;
-  year: number;
-  keywords: string[];
-}
-
-export interface Lead {
+export interface FundingLead {
   id: string;
-  name: string;
-  title: string;
-  company: Company;
-  location: string; // The person's location
-  email: string;
-  linkedinUrl: string;
-  publications: Publication[];
-  
+  company: string;
+  domain: string;
+  linkedin: string;
+  amount: number; // in USD
+  round: string;
+  investors: string[];
+  leadInvestor: string;
+  country: string;
+  dateAnnounced: string;
+  hiringTier: 'A' | 'B' | 'C' | 'Unknown';
+  techRoles: number;
+  atsProvider: string;
+  careersUrl: string;
+  sourceUrl: string;
+
   // Scoring / Enrichment
   calculatedScore: number;
   rank: 'Very High' | 'High' | 'Medium' | 'Low';
   scoreBreakdown: {
-    roleFit: number;
-    companyIntent: number;
-    technographic: number;
-    location: number;
-    scientificIntent: number;
+    fundingStage: number;
+    fundingAmount: number;
+    investorQuality: number;
+    hiringActivity: number;
+    techRoles: number;
     total: number;
   };
 }
