@@ -26,31 +26,49 @@ export default function Dashboard() {
     }, [searchQuery, countryFilter, minScore]);
 
     const exportToCSV = () => {
-        const headers = ['Rank,Score,Company,Domain,Round,Amount (USD),Lead Investor,Country,Hiring Tier,Tech Roles,Careers URL'];
-        const rows = filteredLeads.map(lead =>
-            [
-                lead.rank,
-                lead.calculatedScore,
-                `"${lead.company}"`,
-                lead.domain,
-                `"${lead.round}"`,
-                lead.amount,
-                `"${lead.leadInvestor}"`,
-                lead.country,
-                lead.hiringTier,
-                lead.techRoles,
-                lead.careersUrl
-            ].join(',')
-        );
+        // Helper function to escape CSV fields
+        const escapeCSV = (field: any): string => {
+            if (field === null || field === undefined || field === '') return '';
+            const str = String(field);
+            // If field contains comma, quote, or newline, wrap in quotes and escape internal quotes
+            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+                return `"${str.replace(/"/g, '""')}"`;
+            }
+            return str;
+        };
 
-        const csvContent = "data:text/csv;charset=utf-8," + headers.concat(rows).join("\n");
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", "fundscout_leads_export.csv");
+        const headers = ['Rank', 'Score', 'Company', 'Domain', 'Round', 'Amount (USD)', 'Lead Investor', 'Country', 'Hiring Tier', 'Tech Roles', 'Careers URL'];
+
+        const rows = filteredLeads.map(lead => [
+            lead.rank,
+            lead.calculatedScore,
+            lead.company,
+            lead.domain,
+            lead.round,
+            lead.amount,
+            lead.leadInvestor,
+            lead.country,
+            lead.hiringTier,
+            lead.techRoles,
+            lead.careersUrl
+        ].map(escapeCSV).join(','));
+
+        // Add BOM for Excel compatibility
+        const BOM = '\uFEFF';
+        const csvContent = BOM + [headers.join(','), ...rows].join('\n');
+
+        // Create blob instead of data URI for better compatibility
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'fundscout_leads_export.csv');
+        link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     return (
