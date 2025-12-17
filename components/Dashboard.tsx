@@ -26,52 +26,71 @@ export default function Dashboard() {
     }, [searchQuery, countryFilter, minScore]);
 
     const exportToExcel = async () => {
-        // Dynamically import xlsx library
-        const XLSX = await import('xlsx');
+        try {
+            // Dynamically import xlsx library
+            const XLSX = await import('xlsx');
 
-        // Prepare data for Excel
-        const data = filteredLeads.map(lead => ({
-            'Rank': lead.rank,
-            'Score': lead.calculatedScore,
-            'Company': lead.company,
-            'Domain': lead.domain,
-            'Round': lead.round,
-            'Amount (USD)': lead.amount,
-            'Lead Investor': lead.leadInvestor,
-            'All Investors': lead.investors.join('; '),
-            'Country': lead.country,
-            'Date Announced': lead.dateAnnounced,
-            'Hiring Tier': lead.hiringTier,
-            'Tech Roles': lead.techRoles,
-            'Careers URL': lead.careersUrl,
-            'Score: Funding Stage': lead.scoreBreakdown.fundingStage,
-            'Score: Funding Amount': lead.scoreBreakdown.fundingAmount,
-            'Score: Investor Quality': lead.scoreBreakdown.investorQuality,
-            'Score: Hiring Activity': lead.scoreBreakdown.hiringActivity,
-            'Score: Tech Roles': lead.scoreBreakdown.techRoles
-        }));
+            // Prepare data for Excel
+            const data = filteredLeads.map(lead => ({
+                'Rank': lead.rank,
+                'Score': lead.calculatedScore,
+                'Company': lead.company,
+                'Domain': lead.domain,
+                'Round': lead.round,
+                'Amount (USD)': lead.amount,
+                'Lead Investor': lead.leadInvestor,
+                'All Investors': lead.investors.join('; '),
+                'Country': lead.country,
+                'Date Announced': lead.dateAnnounced,
+                'Hiring Tier': lead.hiringTier,
+                'Tech Roles': lead.techRoles,
+                'Careers URL': lead.careersUrl,
+                'Score: Funding Stage': lead.scoreBreakdown.fundingStage,
+                'Score: Funding Amount': lead.scoreBreakdown.fundingAmount,
+                'Score: Investor Quality': lead.scoreBreakdown.investorQuality,
+                'Score: Hiring Activity': lead.scoreBreakdown.hiringActivity,
+                'Score: Tech Roles': lead.scoreBreakdown.techRoles
+            }));
 
-        // Create workbook and worksheet
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'FundScout Leads');
+            // Create workbook and worksheet
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'FundScout Leads');
 
-        // Auto-size columns
-        const maxWidth = 50;
-        const colWidths = Object.keys(data[0] || {}).map(key => {
-            const maxLen = Math.max(
-                key.length,
-                ...data.map(row => String(row[key as keyof typeof row] || '').length)
-            );
-            return { wch: Math.min(maxLen + 2, maxWidth) };
-        });
-        worksheet['!cols'] = colWidths;
+            // Auto-size columns
+            const maxWidth = 50;
+            const colWidths = Object.keys(data[0] || {}).map(key => {
+                const maxLen = Math.max(
+                    key.length,
+                    ...data.map(row => String(row[key as keyof typeof row] || '').length)
+                );
+                return { wch: Math.min(maxLen + 2, maxWidth) };
+            });
+            worksheet['!cols'] = colWidths;
 
-        // Generate filename with date
-        const filename = `fundscout_leads_${new Date().toISOString().split('T')[0]}.xlsx`;
+            // Generate filename with date
+            const filename = `fundscout_leads_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-        // Write to Excel file
-        XLSX.writeFile(workbook, filename);
+            // Write to binary string and create blob
+            const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+            const blob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            // Create download link
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+
+            console.log('✅ Excel file downloaded:', filename);
+        } catch (error) {
+            console.error('❌ Error exporting to Excel:', error);
+            alert('Failed to export Excel file. Please try again.');
+        }
     };
 
     return (
