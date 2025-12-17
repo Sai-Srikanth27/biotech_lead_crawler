@@ -25,50 +25,53 @@ export default function Dashboard() {
         });
     }, [searchQuery, countryFilter, minScore]);
 
-    const exportToCSV = () => {
-        // Helper function to escape CSV fields
-        const escapeCSV = (field: any): string => {
-            if (field === null || field === undefined || field === '') return '';
-            const str = String(field);
-            // If field contains comma, quote, or newline, wrap in quotes and escape internal quotes
-            if (str.includes(',') || str.includes('"') || str.includes('\n')) {
-                return `"${str.replace(/"/g, '""')}"`;
-            }
-            return str;
-        };
+    const exportToExcel = async () => {
+        // Dynamically import xlsx library
+        const XLSX = await import('xlsx');
 
-        const headers = ['Rank', 'Score', 'Company', 'Domain', 'Round', 'Amount (USD)', 'Lead Investor', 'Country', 'Hiring Tier', 'Tech Roles', 'Careers URL'];
+        // Prepare data for Excel
+        const data = filteredLeads.map(lead => ({
+            'Rank': lead.rank,
+            'Score': lead.calculatedScore,
+            'Company': lead.company,
+            'Domain': lead.domain,
+            'Round': lead.round,
+            'Amount (USD)': lead.amount,
+            'Lead Investor': lead.leadInvestor,
+            'All Investors': lead.investors.join('; '),
+            'Country': lead.country,
+            'Date Announced': lead.dateAnnounced,
+            'Hiring Tier': lead.hiringTier,
+            'Tech Roles': lead.techRoles,
+            'Careers URL': lead.careersUrl,
+            'Score: Funding Stage': lead.scoreBreakdown.fundingStage,
+            'Score: Funding Amount': lead.scoreBreakdown.fundingAmount,
+            'Score: Investor Quality': lead.scoreBreakdown.investorQuality,
+            'Score: Hiring Activity': lead.scoreBreakdown.hiringActivity,
+            'Score: Tech Roles': lead.scoreBreakdown.techRoles
+        }));
 
-        const rows = filteredLeads.map(lead => [
-            lead.rank,
-            lead.calculatedScore,
-            lead.company,
-            lead.domain,
-            lead.round,
-            lead.amount,
-            lead.leadInvestor,
-            lead.country,
-            lead.hiringTier,
-            lead.techRoles,
-            lead.careersUrl
-        ].map(escapeCSV).join(','));
+        // Create workbook and worksheet
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'FundScout Leads');
 
-        // Add BOM for Excel compatibility
-        const BOM = '\uFEFF';
-        const csvContent = BOM + [headers.join(','), ...rows].join('\n');
+        // Auto-size columns
+        const maxWidth = 50;
+        const colWidths = Object.keys(data[0] || {}).map(key => {
+            const maxLen = Math.max(
+                key.length,
+                ...data.map(row => String(row[key as keyof typeof row] || '').length)
+            );
+            return { wch: Math.min(maxLen + 2, maxWidth) };
+        });
+        worksheet['!cols'] = colWidths;
 
-        // Create blob instead of data URI for better compatibility
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
+        // Generate filename with date
+        const filename = `fundscout_leads_${new Date().toISOString().split('T')[0]}.xlsx`;
 
-        link.setAttribute('href', url);
-        link.setAttribute('download', 'fundscout_leads_export.csv');
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        // Write to Excel file
+        XLSX.writeFile(workbook, filename);
     };
 
     return (
@@ -82,10 +85,10 @@ export default function Dashboard() {
                 </div>
                 <div className="flex gap-4">
                     <button
-                        onClick={exportToCSV}
+                        onClick={exportToExcel}
                         className="flex items-center gap-2 px-4 py-2 bg-slate-900 rounded-lg border border-slate-700 hover:bg-slate-800 transition text-sm font-medium active:scale-95"
                     >
-                        <Download size={16} /> Export CSV
+                        <Download size={16} /> Export to Excel
                     </button>
                 </div>
             </header>
